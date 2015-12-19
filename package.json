@@ -1,0 +1,19 @@
+{
+  "name": "natural-app",
+  "version": "1.0.0",
+  "description": "Clock shows when the sun will rise and set for your location.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.3",
+    "natural_calendar": "0.0.4",
+    "sun-clock": "^1.0.0"
+  },
+  "devDependencies": {
+    "webpack": "^1.12.9"
+  }
+}
