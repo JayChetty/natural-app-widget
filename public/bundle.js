@@ -45,56 +45,60 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	canvasClock = __webpack_require__(1);
-	NaturalCalendar = __webpack_require__(2);
-	SunCalc = __webpack_require__(4)
-	window.onload = function(){
-	  console.log('in the house yo');
-	  var canvas = document.createElement('canvas');
-	  canvas.style.width = '200px';
-	  canvas.style.height = '100px';
-	  canvas.style.background = '#777777'
-	  canvas.style.position = 'fixed'
-	  canvas.style.top = '0px'
-	  canvas.style.right = '0px'
+	SunCalc = __webpack_require__(2)
+	canvasCalendar = __webpack_require__(3);
 
-	  document.body.appendChild(canvas)
+	NaturalClockWidget = {
+	  addWidget: function(){
+	    console.log('in the house yo');
+	    var canvas = document.createElement('canvas');
+	    canvas.style.width = '200px';
+	    canvas.style.height = '100px';
+	    canvas.style.background = '#99777777'
+	    canvas.style.position = 'fixed'
+	    canvas.style.top = '0px'
+	    canvas.style.right = '-50px'
 
-	  console.log('canvas', canvas)
-	  var clock = canvasClock({
-	    center: { x: canvas.width/2, y: canvas.height/2 },
-	    canvas: canvas,
-	    radius:50
-	  });
-	  clock.drawOutline();
-	  clock.drawLineForTime(new Date());
+	    var radius = 50;
+	    document.body.appendChild(canvas)
+
+	    console.log('canvas', canvas)
+	    var clock = canvasClock({
+	      center: { x: canvas.width/2, y: canvas.height/2 },
+	      canvas: canvas,
+	      radius:radius
+	    });
+	    clock.drawOutline();
+	    clock.drawLineForTime(new Date());
 
 
-	  var drawSunLines = function(latitude, longitude){
-	    var sunTimes = SunCalc.getTimes(new Date(), latitude, longitude);
-	    clock.drawLineForTime(sunTimes.sunrise)
-	    clock.drawLineForTime(sunTimes.sunset)
-	    clock.drawSweep(sunTimes.sunrise, sunTimes.sunset)
-	  };
+	    var drawSunLines = function(latitude, longitude){
+	      var sunTimes = SunCalc.getTimes(new Date(), latitude, longitude);
+	      clock.drawLineForTime(sunTimes.sunrise)
+	      clock.drawLineForTime(sunTimes.sunset)
+	      clock.drawSweep(sunTimes.sunrise, sunTimes.sunset)
+	    };
 
-	  var gotLocation = function(location){
-	    var latitude = location.coords.latitude
-	    var longitude = location.coords.longitude
-	    window.localStorage.setItem('latitude', latitude);
-	    window.localStorage.setItem('longitude', longitude);
-	    drawSunLines(latitude, longitude);
-	  }; 
+	    var gotLocation = function(location){
+	      var latitude = location.coords.latitude
+	      var longitude = location.coords.longitude
+	      window.localStorage.setItem('latitude', latitude);
+	      window.localStorage.setItem('longitude', longitude);
+	      drawSunLines(latitude, longitude);
+	    }; 
 
-	  var noLocation = function(error){
-	    console.log('cannot get location', error);
-	    if(localStorage.getItem('latitude')){
-	      drawSunLines(localStorage.getItem('latitude'), localStorage.getItem('longitude'))
-	    }
-	    else{
-	      alert('Cannot Find Location, enable location on device or enter manually');
-	    }
-	  };
+	    var noLocation = function(error){
+	      console.log('cannot get location', error);
+	      if(localStorage.getItem('latitude')){
+	        drawSunLines(localStorage.getItem('latitude'), localStorage.getItem('longitude'))
+	      }
+	      else{
+	        alert('Cannot Find Location, enable location on device');
+	      }
+	    };
 
-	  navigator.geolocation.getCurrentPosition( gotLocation, noLocation, { timeout: 60000, enableHighAccuracy: false } );    
+	    navigator.geolocation.getCurrentPosition( gotLocation, noLocation, { timeout: 60000, enableHighAccuracy: false } );    
+	  }
 	};
 
 /***/ },
@@ -114,7 +118,7 @@
 	    },
 	    drawSweep: function(startTime, endTime, color){
 	      ctx.beginPath();
-	      ctx.fillStyle = "rgba(219, 223, 99, 0.2)";
+	      ctx.fillStyle = "rgba(219, 223, 99, 0.4)";
 	      ctx.moveTo(this.center.x,this.center.y);
 	      ctx.arc( 
 	        this.center.x,
@@ -175,196 +179,6 @@
 
 /***/ },
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Cycle = __webpack_require__(3)
-
-	var EarthCycles = function(pointInTime){
-	  //Constants for Setup
-	  this.DAY_IN_MILLISECONDS = 24 * 60 * 60 *1000;
-	  this.AN_AXIS_MAX_N = new Date(2012,11,21,11,12);
-	  this.YEAR_IN_DAYS = 365.24219;
-	  this.YEAR_IN_MILLISECONDS = this.YEAR_IN_DAYS * this.DAY_IN_MILLISECONDS;
-
-	  this.A_NEW_MOON = new Date(2012,10,13,22,8);
-	  this.MOONTH_IN_DAYS = 29.53059;
-	  this.MOONTH_IN_MILLISECONDS = this.MOONTH_IN_DAYS * this.DAY_IN_MILLISECONDS;
-
-	  this.YEAR_IN_MOONTHS = (this.YEAR_IN_SECONDS/this.MOONTH_IN_SECONDS);
-
-	  this.year = new Cycle(this.AN_AXIS_MAX_N.valueOf(),this.YEAR_IN_MILLISECONDS, pointInTime, true);
-	  this.moonth = new Cycle(this.A_NEW_MOON.valueOf(), this.MOONTH_IN_MILLISECONDS, pointInTime, true);
-
-	  this.moonths = this.moonthsOfYear();
-
-	}
-
-	EarthCycles.prototype = {
-	  yearsPassed:function(){
-	    return (this.year.cyclesSinceAnchor());
-	  },
-
-	  dayOfYear:function(){
-	    return (this.year.dayOfCycle());
-	  },
-
-	  firstNewDayOfYear:function(){
-	    return (this.year.firstDayStartOfCurrentCycle());
-	  },
-
-	  lastEndDayOfYear:function(){
-	    return (this.year.lastDayEndOfCurrentCycle());
-	  },
-
-	  daysInYear:function(){
-	    return(this.year.daysInCycle());
-	  },
-
-	  msToDays:function(ms){
-	    return(ms/this.DAY_IN_MILLISECONDS);
-	  },
-
-	  moonthsOfYear:function(){
-	    moonths = [];
-	    point = this.firstNewDayOfYear();
-	    sum = 0;
-
-	    while (point < this.lastEndDayOfYear()) {
-	      moonth = new Cycle(this.A_NEW_MOON.valueOf(), this.MOONTH_IN_MILLISECONDS, point, true);
-	      startDayMoonth = moonth.firstDayStartOfCurrentCycle();
-	      endDayMoonth = moonth.lastDayEndOfCurrentCycle();
-
-	      if (moonths.length === 0) {
-	        daysInMoonth =  this.msToDays(endDayMoonth - point);
-	      }
-	      else {
-	        if (endDayMoonth > this.lastEndDayOfYear()){
-	          daysInMoonth = this.msToDays(this.lastEndDayOfYear() - startDayMoonth);
-	        }
-	        else {
-	          daysInMoonth =  moonth.daysInCycle();
-	        }
-	      }
-
-	      moonths.push(daysInMoonth);
-	      sum = sum + daysInMoonth;
-
-	      point = endDayMoonth + this.DAY_IN_MILLISECONDS;
-	    }
-
-	    return(moonths);
-
-	  },
-
-
-	  dayOfMoonth:function(){
-	    return (this.moonth.dayOfCycle());
-	  },
-
-	  firstNewMoonOfYear:function(){
-	    var startOfYear = this.year.firstDayStartOfCurrentCycle();
-	    moonth = new Cycle(this.A_NEW_MOON.valueOf(), this.MOONTH_IN_MILLISECONDS, startOfYear , true);
-	    return (moonth.lastDayEndOfCurrentCycle(startOfYear));
-	  },
-
-	  moonthOfYear:function(){
-	    var found = false;
-	    var index = 0;
-	    var sum = 0;
-	    while (!found) {
-	      sum = sum + this.moonths[index];
-	      if ( this.dayOfYear() < sum) {
-	        found = true;
-	      }
-	      else {
-	        index = index + 1;
-	      }
-	    }
-
-	    return (index + 1);
-	  },
-
-
-	  daysInMoonth:function(){
-	    return(this.moonth.daysInCycle());
-	  },
-
-
-	  displayString:function(){
-	    return "The " + this.dayOfMoonth() + "/" +this.daysInMoonth() + " day of the " + this.moonthOfYear() + "/" + this.moonthsInYear() + " Moonth of Year "
-	  },
-
-	}
-
-	module.exports = EarthCycles;
-
-/***/ },
-/* 3 */
-/***/ function(module, exports) {
-
-	var Cycle = function(anchor, lengthInMilliseconds, pointInTime, adjust){
-	  this.pointInTime = pointInTime
-	  this.anchor = anchor;
-	  this.lengthInMilliseconds = lengthInMilliseconds;
-	  if (this.dayOfCycle() === 0 && adjust) {
-	    this.pointInTime = this.pointInTime - (60*60*24*1000)
-	  }
-	}
-
-	Cycle.prototype = {
-	    millisecondsIntoCycle: function(){
-	      return ((this.pointInTime - this.anchor) % this.lengthInMilliseconds );
-	    },
-	    fractionOfCycle: function(){
-	      return( this.millisecondsIntoCycle()/this.lengthInMilliseconds );
-	    },
-	    cyclesSinceAnchor: function(){
-	      return( Math.floor((this.pointInTime - this.anchor)/this.lengthInMilliseconds));
-	    },
-	    startOfCurrentCycle: function(){
-	      return (this.anchor + (this.cyclesSinceAnchor()*this.lengthInMilliseconds));
-	      var start =  new Date(this.startOfCurrentCycle());
-	      start.setDate(start.getDate()+1);
-	      start.setHours(0,0,0,0);
-	      return (start.valueOf());
-	    },
-	    endOfCurrentCycle: function(){
-	      return (this.anchor + ((this.cyclesSinceAnchor()+1)*this.lengthInMilliseconds));
-	    },
-	    startOfNextCycle: function(){
-	      return (this.startOfCurrentCycle() + this.lengthInMilliseconds);
-	    },
-	    firstDayStartOfCurrentCycle: function(){
-	      var start =  new Date(this.startOfCurrentCycle());
-	      start.setDate(start.getDate()+1);
-	      start.setHours(0,0,0,0);
-	      return (start.valueOf());
-	    },
-
-	    lastDayEndOfCurrentCycle: function(){
-	      var end =  new Date(this.endOfCurrentCycle());
-	      end.setDate(end.getDate()+1);
-	      end.setHours(0,0,0,0);
-	      return (end.valueOf());
-	    },
-	    dayOfCycle: function(){
-	      var adjustedTime = this.pointInTime - this.firstDayStartOfCurrentCycle();
-	      return (Math.ceil(adjustedTime/(60*60*24*1000)));
-	    },
-
-	    length: function(){
-	      return (this.lastDayEndOfCurrentCycle() - this.firstDayStartOfCurrentCycle())
-	    },
-
-	    daysInCycle: function(){
-	      return(Math.round(this.length() / (60*60*24*1000)))
-	    }
-	}
-
-	module.exports = Cycle;
-
-/***/ },
-/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*
@@ -668,6 +482,29 @@
 
 	}());
 
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	module.exports = function(options){
+	  options = options || {};
+	  var canvas = options.canvas;
+	  var ctx = canvas.getContext("2d");
+	  var calendar = {
+	    radius: options.radius,
+	    center: options.center,
+	    render: function(){
+	      this.drawOutline();
+	    },
+	    drawOutline: function(){     
+	      ctx.beginPath();
+	      ctx.arc(this.center.x,this.center.y,this.radius,0, 2*Math.PI);
+	      ctx.stroke();          
+	    },
+	  }
+	  return calendar;
+	}
 
 /***/ }
 /******/ ]);

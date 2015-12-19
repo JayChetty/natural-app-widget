@@ -11,7 +11,7 @@ module.exports = function(options){
     },
     drawSweep: function(startTime, endTime, color){
       ctx.beginPath();
-      ctx.fillStyle = "rgba(219, 223, 99, 0.2)";
+      ctx.fillStyle = "rgba(219, 223, 99, 0.4)";
       ctx.moveTo(this.center.x,this.center.y);
       ctx.arc( 
         this.center.x,
