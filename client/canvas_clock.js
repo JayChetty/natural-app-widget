@@ -1,13 +1,9 @@
-SunClockFactory = require('sun-clock');
 module.exports = function(options){
-  var sunClock = null;//SunClockFactory.createSunClock();
-  console.log('sunclock', sunClock)
   options = options || {};
   console.log('options', options)
   var canvas = options.canvas;
   var ctx = canvas.getContext("2d");
   var clock = {
-    sunClock: sunClock,
     radius: options.radius,
     center: options.center,
     render: function(){
@@ -15,7 +11,7 @@ module.exports = function(options){
     },
     drawSweep: function(startTime, endTime, color){
       ctx.beginPath();
-      ctx.fillStyle = "rgba(10, 255, 99, 0.2)";
+      ctx.fillStyle = "rgba(219, 223, 99, 0.2)";
       ctx.moveTo(this.center.x,this.center.y);
       ctx.arc( 
         this.center.x,
